@@ -1,17 +1,30 @@
 package com.aninfo;
 
-import com.aninfo.model.Account;
-import com.aninfo.service.AccountService;
+import java.util.Collection;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
-import java.util.Optional;
+import com.aninfo.model.Account;
+import com.aninfo.model.Transaction;
+import com.aninfo.service.AccountService;
+import com.aninfo.service.TransactionService;
+
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
@@ -26,6 +39,8 @@ public class Memo1BankApp {
 
 	@Autowired
 	private AccountService accountService;
+	@Autowired
+	private TransactionService transactionService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Memo1BankApp.class, args);
@@ -73,6 +88,27 @@ public class Memo1BankApp {
 	@PutMapping("/accounts/{cbu}/deposit")
 	public Account deposit(@PathVariable Long cbu, @RequestParam Double sum) {
 		return accountService.deposit(cbu, sum);
+	}
+
+	@GetMapping("/accounts/{cbu}/transactions")
+	public Collection<Transaction> getAccountTransactions(@PathVariable Long cbu) {
+		return transactionService.getAccountTransactions(cbu);
+	}
+
+	@GetMapping("transactions/{code}")
+	public ResponseEntity<Transaction> getTransaction(@PathVariable Long code) {
+
+		Optional<Transaction> transactionOptional = transactionService.getTransaction(code);
+		if (!transactionOptional.isPresent()) {
+			return ResponseEntity.notFound().build();
+		}         
+		Transaction transaction = transactionOptional.get();
+		return ResponseEntity.ok(transaction);
+	}
+
+	@DeleteMapping("transactions/{code}")
+	public void deleteTransaction(@PathVariable Long code) {
+		transactionService.deleteTransaction(code);
 	}
 
 	@Bean

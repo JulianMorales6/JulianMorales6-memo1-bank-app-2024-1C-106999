@@ -1,19 +1,27 @@
 package com.aninfo.service;
 
-import com.aninfo.exceptions.DepositNegativeSumException;
-import com.aninfo.exceptions.InsufficientFundsException;
-import com.aninfo.model.Account;
-import com.aninfo.repository.AccountRepository;
+import java.util.Collection;
+import java.util.Optional;
+
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.Optional;
+import com.aninfo.exceptions.DepositNegativeSumException;
+import com.aninfo.exceptions.InsufficientFundsException;
+import com.aninfo.model.Account;
+import com.aninfo.model.Transaction;
+import com.aninfo.model.TransactionType;
+import com.aninfo.repository.AccountRepository;
+
 
 @Service
 public class AccountService {
 
+    @Autowired
+    private TransactionService transactionService;
+    
     @Autowired
     private AccountRepository accountRepository;
 
@@ -45,6 +53,13 @@ public class AccountService {
             throw new InsufficientFundsException("Insufficient funds");
         }
 
+        Transaction transaction = new Transaction( 
+            TransactionType.WITHDRAW,
+            sum,
+            account);
+
+        transactionService.createTransaction(transaction);
+
         account.setBalance(account.getBalance() - sum);
         accountRepository.save(account);
 
@@ -59,6 +74,14 @@ public class AccountService {
         }
 
         Account account = accountRepository.findAccountByCbu(cbu);
+
+        Transaction transaction = new Transaction( 
+            TransactionType.DEPOSIT,
+            sum,
+            account);
+
+        transactionService.createTransaction(transaction);
+
         account.setBalance(account.getBalance() + sum);
         accountRepository.save(account);
 
